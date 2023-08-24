@@ -1,6 +1,7 @@
 import express from "express";
 import mysqlDb from "../mysqlDb";
 import {ApiCategory, Category} from "../types";
+import {OkPacketParams} from "mysql2";
 
 const categoriesRouter = express.Router();
 
@@ -30,12 +31,14 @@ categoriesRouter.post('/' ,async (req, res) => {
         description: req.body.description
     }
     const connection =  mysqlDb.getConnection();
-    await connection.query(
+    const result = await connection.query(
         'INSERT INTO categories (title, description) VALUES (?, ?)',
         [categoryData.title, categoryData.description]
     );
+    const info = result[0] as OkPacketParams;
     res.send({
-        ...categoryData
+        ...categoryData,
+        id: info.insertId
     });
 });
 categoriesRouter.delete('/:id', async (req, res) => {

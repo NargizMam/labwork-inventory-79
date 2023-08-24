@@ -16,7 +16,7 @@ export interface Resource {
     title: string;
     description: string | null;
     image: string | null;
-    place_id: string | null;
-    category_id: string | null;
+    place_id: number | null;
+    category_id: number | null;
 }
-export type ApiResources = Omit<Resource, 'id'>
+export type ApiResource = Omit<Resource, 'id'>
