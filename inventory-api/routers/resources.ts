@@ -1,14 +1,19 @@
 import express from "express";
 import mysqlDb from "../mysqlDb";
-import {ApiResource, Resource} from "../types";
+import {ApiResource, FK, Resource} from "../types";
 import {imagesUpload} from "../multer";
 import {OkPacketParams} from "mysql2";
 
 const  resourcesRouter = express.Router();
 
+// const getTitleCategories = async (id: number) => {
+//     const connection =  mysqlDb.getConnection();
+//
+//
+// }
 resourcesRouter.get('/', async (req, res) => {
     const connection =  mysqlDb.getConnection();
-    const result = await connection.query('SELECT id, title, image,  description, place_id, category_id FROM resources');
+    const result = await connection.query('SELECT id, title, image,  description FROM resources');
     const resourcesList = result[0] as Resource[];
     res.send(resourcesList);
 });
@@ -18,15 +23,30 @@ resourcesRouter.get('/:id', async (req, res) => {
         'SELECT * FROM resources WHERE id = ?', [req.params.id]);
     const resourcesList = result[0] as Resource[];
     const resources = resourcesList[0];
+    const category_id  = await connection.query(
+        'SELECT title FROM categories WHERE id = ?', [resources.category_id]);
+    const categoryTitle = category_id[0] as FK[];
+    const place_id = await connection.query(
+        'SELECT title FROM places WHERE id = ?', [resources.place_id]);
+    const placesTitle  = place_id[0] as FK[];
+    const resourcesData: ApiResource = {
+        title: req.body.title,
+        description: req.body.description,
+        image: req.file ? req.file.filename : null,
+        place_id: categoryTitle[0].title,
+        category_id: placesTitle[0].title
+    }
     if(!resources) {
         return res.status(404).send({ERROR: 'Resource not found!'});
     }
-    res.send(resources);
+    res.send(resourcesData);
 });
 resourcesRouter.post('/' ,imagesUpload.single('image') ,async (req, res) => {
     if(!req.body.title){
         return res.status(404).send({ERROR: 'Title field is required!'});
     }
+    const connect =  mysqlDb.getConnection();
+
     const resourcesData: ApiResource = {
         title: req.body.title,
         description: req.body.description,
