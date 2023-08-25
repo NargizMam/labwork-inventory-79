@@ -26,13 +26,15 @@ export interface ApiResource {
     place_id: string | null;
     category_id: string | null;
 }
-export interface FK {
-    title: string
-}
 export interface ResourceInfo {
     title: string;
     description: string | null;
     image: string | null;
     placesTitle: string | null;
     categoriesTitle: string | null;
+}
+export interface ResourceUpdate {
+    title: string;
+    description: string | null;
+    image: string | null;
 }

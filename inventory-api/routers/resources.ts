@@ -1,16 +1,11 @@
 import express from "express";
 import mysqlDb from "../mysqlDb";
-import {ApiResource, FK, Resource, ResourceInfo} from "../types";
+import {ApiResource, Resource, ResourceInfo, ResourceUpdate} from "../types";
 import {imagesUpload} from "../multer";
 import {OkPacketParams} from "mysql2";
 
 const  resourcesRouter = express.Router();
 
-// const getTitleCategories = async (id: number) => {
-//     const connection =  mysqlDb.getConnection();
-//
-//
-// }
 resourcesRouter.get('/', async (req, res) => {
     const connection =  mysqlDb.getConnection();
     const result = await connection.query('SELECT id, title, category_id, place_id FROM resources');
@@ -25,7 +20,7 @@ resourcesRouter.get('/:id', async (req, res) => {
          FROM resources
          JOIN categories  ON resources.category_id = categories.id
          JOIN places ON resources.place_id = places.id 
-         WHERE resources.id = ${req.params.id}`);
+         WHERE resources.id = ?`, [req.params.id]);
 
     const resource = result[0] as ResourceInfo[];
     const resourcesData: ResourceInfo = {
@@ -44,7 +39,6 @@ resourcesRouter.post('/' ,imagesUpload.single('image') ,async (req, res) => {
     if(!req.body.title){
         return res.status(404).send({ERROR: 'Title field is required!'});
     }
-
     const resourcesData: ApiResource = {
         title: req.body.title,
         description: req.body.description,
@@ -67,6 +61,28 @@ resourcesRouter.post('/' ,imagesUpload.single('image') ,async (req, res) => {
     res.send({
         ...resourcesData,
         id: info.insertId
+    });
+});
+resourcesRouter.put('/:id' ,imagesUpload.single('image') ,async (req, res) => {
+    if(!req.body.title){
+        return res.status(404).send({ERROR: 'Title field is required!'});
+    }
+    const resourcesData: ResourceUpdate = {
+        title: req.body.title,
+        description: req.body.description,
+        image: req.file ? req.file.filename : null,
+    }
+    const connection =  mysqlDb.getConnection();
+    const result = await connection.query(
+        `UPDATE resources SET  title = ?, description = ?, image = ? WHERE resources.id = ${req.params.id}`,
+        [resourcesData.title,
+            resourcesData.description,
+            resourcesData.image
+        ]
+    );
+    const info = result[0] as OkPacketParams;
+    res.send({
+        ...resourcesData,
     });
 });
 resourcesRouter.delete('/:id', async (req, res) => {
