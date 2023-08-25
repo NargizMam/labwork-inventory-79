@@ -1,12 +1,12 @@
 export interface Category {
     id: number;
-    title: string;
+    categoriesTitle: string;
     description: string | null;
 }
 export type ApiCategory = Omit<Category, 'id'>
 export interface Place {
     id: number;
-    title: string;
+    placesTitle: string;
     description: string | null;
 }
 export type ApiPlace = Omit<Place, 'id'>
@@ -28,4 +28,11 @@ export interface ApiResource {
 }
 export interface FK {
     title: string
+}
+export interface ResourceInfo {
+    title: string;
+    description: string | null;
+    image: string | null;
+    placesTitle: string | null;
+    categoriesTitle: string | null;
 }

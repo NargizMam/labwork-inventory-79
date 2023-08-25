@@ -7,7 +7,7 @@ const categoriesRouter = express.Router();
 
 categoriesRouter.get('/', async (req, res) => {
     const connection =  mysqlDb.getConnection();
-    const result = await connection.query('SELECT id, title, description FROM categories');
+    const result = await connection.query('SELECT id, categoriesTitle, description FROM categories');
     const categoriesList = result[0] as Category[];
     res.send(categoriesList);
 });
@@ -23,17 +23,17 @@ categoriesRouter.get('/:id', async (req, res) => {
     res.send(category);
 });
 categoriesRouter.post('/' ,async (req, res) => {
-    if(!req.body.title){
+    if(!req.body.categoriesTitle){
         return res.status(404).send({ERROR: 'Title field is required!'});
     }
     const categoryData: ApiCategory = {
-        title: req.body.title,
+        categoriesTitle: req.body.categoriesTitle,
         description: req.body.description
     }
     const connection =  mysqlDb.getConnection();
     const result = await connection.query(
-        'INSERT INTO categories (title, description) VALUES (?, ?)',
-        [categoryData.title, categoryData.description]
+        'INSERT INTO categories (categoriesTitle, description) VALUES (?, ?)',
+        [categoryData.categoriesTitle, categoryData.description]
     );
     const info = result[0] as OkPacketParams;
     res.send({

@@ -7,7 +7,7 @@ const placesRouter = express.Router();
 
 placesRouter.get('/', async (req, res) => {
     const connection =  mysqlDb.getConnection();
-    const result = await connection.query('SELECT id, title, description FROM places');
+    const result = await connection.query('SELECT id, placesTitle, description FROM places');
     const placesList = result[0] as Place[];
     res.send(placesList);
 });
@@ -23,17 +23,17 @@ placesRouter.get('/:id', async (req, res) => {
     res.send(place);
 });
 placesRouter.post('/' ,async (req, res) => {
-    if(!req.body.title){
+    if(!req.body.placesTitle){
         return res.status(404).send({ERROR: 'Title field is required!'});
     }
     const placesData: ApiPlace = {
-        title: req.body.title,
+        placesTitle: req.body.title,
         description: req.body.description
     }
     const connection =  mysqlDb.getConnection();
     const result =  await connection.query(
         'INSERT INTO places (title, description) VALUES (?, ?)',
-        [placesData.title, placesData.description]
+        [placesData.placesTitle, placesData.description]
     );
     const info = result[0] as OkPacketParams;
     res.send({

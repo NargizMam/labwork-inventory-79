@@ -1,6 +1,6 @@
 import express from "express";
 import mysqlDb from "../mysqlDb";
-import {ApiResource, FK, Resource} from "../types";
+import {ApiResource, FK, Resource, ResourceInfo} from "../types";
 import {imagesUpload} from "../multer";
 import {OkPacketParams} from "mysql2";
 
@@ -13,30 +13,29 @@ const  resourcesRouter = express.Router();
 // }
 resourcesRouter.get('/', async (req, res) => {
     const connection =  mysqlDb.getConnection();
-    const result = await connection.query('SELECT id, title, image,  description FROM resources');
+    const result = await connection.query('SELECT id, title, category_id, place_id FROM resources');
     const resourcesList = result[0] as Resource[];
     res.send(resourcesList);
 });
 resourcesRouter.get('/:id', async (req, res) => {
     const connection =  mysqlDb.getConnection();
     const result = await connection.query(
-        'SELECT * FROM resources WHERE id = ?', [req.params.id]);
-    const resourcesList = result[0] as Resource[];
-    const resources = resourcesList[0];
-    const category_id  = await connection.query(
-        'SELECT title FROM categories WHERE id = ?', [resources.category_id]);
-    const categoryTitle = category_id[0] as FK[];
-    const place_id = await connection.query(
-        'SELECT title FROM places WHERE id = ?', [resources.place_id]);
-    const placesTitle  = place_id[0] as FK[];
-    const resourcesData: ApiResource = {
-        title: req.body.title,
-        description: req.body.description,
-        image: req.file ? req.file.filename : null,
-        place_id: categoryTitle[0].title,
-        category_id: placesTitle[0].title
+        `SELECT resources.title, resources.description, resources.image, 
+         categories.categoriesTitle, places.placesTitle 
+         FROM resources
+         JOIN categories  ON resources.category_id = categories.id
+         JOIN places ON resources.place_id = places.id 
+         WHERE resources.id = ${req.params.id}`);
+
+    const resource = result[0] as ResourceInfo[];
+    const resourcesData: ResourceInfo = {
+        title: resource[0].title,
+        description: resource[0].description,
+        image: resource[0].image,
+        placesTitle: resource[0].placesTitle,
+        categoriesTitle: resource[0].categoriesTitle
     }
-    if(!resources) {
+    if(!resourcesData) {
         return res.status(404).send({ERROR: 'Resource not found!'});
     }
     res.send(resourcesData);
@@ -45,7 +44,6 @@ resourcesRouter.post('/' ,imagesUpload.single('image') ,async (req, res) => {
     if(!req.body.title){
         return res.status(404).send({ERROR: 'Title field is required!'});
     }
-    const connect =  mysqlDb.getConnection();
 
     const resourcesData: ApiResource = {
         title: req.body.title,
