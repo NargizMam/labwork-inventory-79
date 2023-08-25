@@ -6,7 +6,7 @@ import {OkPacketParams} from "mysql2";
 
 const  resourcesRouter = express.Router();
 
-resourcesRouter.get('/', async (req, res) => {
+resourcesRouter.get('/', async (_, res) => {
     const connection =  mysqlDb.getConnection();
     const result = await connection.query('SELECT id, title, category_id, place_id FROM resources');
     const resourcesList = result[0] as Resource[];
@@ -80,10 +80,7 @@ resourcesRouter.put('/:id' ,imagesUpload.single('image') ,async (req, res) => {
             resourcesData.image
         ]
     );
-    const info = result[0] as OkPacketParams;
-    res.send({
-        ...resourcesData,
-    });
+    res.send(result);
 });
 resourcesRouter.delete('/:id', async (req, res) => {
     await mysqlDb.getConnection().query(
